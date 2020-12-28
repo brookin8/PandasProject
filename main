@@ -1,0 +1,30 @@
+#!/usr/bin/ env
+import argparse
+import pandas as pd
+
+def main():
+  parser = argparse.ArgumentParser(description='Energy Usage Program')
+  parser.add_argument('fileName', nargs="?", type=str, help='Provide the name of the input file')
+  parser.add_argument('program', nargs="?", type=str, help='Indicate either peak_usage or expected_savings program')
+  parser.add_argument('accountNumber', nargs="?", type=int, help='Provide the customer account number')
+  args = parser.parse_args()
+  
+  accountNumber = args.accountNumber  
+  accountData = pd.read_csv('example_accounts.csv')
+  buildingId = str(accountData.query('account_number == @accountNumber').building_id.values[0])
+  usageData = pd.read_csv(args.fileName)
+
+  if args.program.lower() == 'peak_usage':
+    maxUsageValue = str(max(usageData.query('building_id == @buildingId').kwh_usage.values))
+    maxUsageTime = str(usageData.query('building_id == @buildingId & kwh_usage == @maxUsageValue').hour.values[0])
+    print(maxUsageValue + ' at ' + maxUsageTime)
+  elif args.program.lower() == 'expected_savings':
+    totalUsageValue = sum(usageData.query('building_id == @buildingId & hour > 11 & hour < 18').kwh_usage.values)
+    savings = str(totalUsageValue * .3)
+    print(savings + ' kWh')
+  else: 
+    print('Program not recognized')
+
+if __name__ == "__main__":
+  main()
+
